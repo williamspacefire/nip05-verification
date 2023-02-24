@@ -8,6 +8,9 @@ export default function NostrJson() {
 
 export async function getServerSideProps({ req, res, query }) {
     res.setHeader("Content-Type", "application/json")
+    res.setHeader("Access-Control-Allow-Origin", "*")
+    res.setHeader("Cache-Control", "max-age=1704085200")
+
     if (query.name) {
         if (await checkIfUsernameExists(query.name)) {
             const userInfo = await getUserInfo(query.name)
