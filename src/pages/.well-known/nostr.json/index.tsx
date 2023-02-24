@@ -27,4 +27,8 @@ export async function getServerSideProps({ req, res, query }) {
         )
     }
     res.end()
+
+    return {
+        props: {},
+    }
 }
