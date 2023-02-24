@@ -9,7 +9,6 @@ import {
     Button,
 } from "@chakra-ui/react"
 import { ChangeEvent, useState } from "react"
-import { nip19 } from "nostr-tools"
 
 export default function Home() {
     const checkUsernameEndpoint = "/api/checkusername"
@@ -73,7 +72,7 @@ export default function Home() {
     }
 
     function handleRegisterUsername() {
-        if (nip19.decode(npub).type === "npub") {
+        if (npub.includes("npub")) {
             registerUsernameAndNpub(npub)
         } else {
             alert("Invalid npub")
