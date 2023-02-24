@@ -1,3 +1,4 @@
+import { nip19 } from "nostr-tools"
 import React from "react"
 import checkIfUsernameExists from "../../../lib/database/checkusername"
 import getUserInfo from "../../../lib/database/getuserinfo"
@@ -14,7 +15,11 @@ export async function getServerSideProps({ req, res, query }) {
     if (query.name) {
         if (await checkIfUsernameExists(query.name)) {
             const userInfo = await getUserInfo(query.name)
-            res.write(`{"names":{"${userInfo.username}":"${userInfo.pubkey}"}}`)
+            res.write(
+                `{"names":{"${userInfo.username}":"${
+                    nip19.decode(userInfo.pubkey).data
+                }"}}`
+            )
         } else {
             res.write(
                 JSON.stringify({
