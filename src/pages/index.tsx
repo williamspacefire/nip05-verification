@@ -7,8 +7,10 @@ import {
     InputGroup,
     InputRightAddon,
     Button,
+    Text,
 } from "@chakra-ui/react"
-import { ChangeEvent, useState } from "react"
+import { ChangeEvent, useReducer, useState } from "react"
+import QRCode from "react-qr-code"
 
 export default function Home() {
     const checkUsernameEndpoint = "/api/checkusername"
@@ -16,11 +18,26 @@ export default function Home() {
     const buttontexts = ["Check Username", "Register Username"]
 
     const [usernameChecked, setUsernameChecked] = useState(false)
-    const [finishedRegister, setFinishedRegister] = useState(false)
     const [buttonLoading, setButtonLoading] = useState(false)
     const [buttonText, setButtonText] = useState(buttontexts[0])
     const [username, setUsername] = useState("")
     const [npub, setNpub] = useState("")
+    type checkResponse = {
+        exists: false
+        error: false
+        message: ""
+        invoice_id: false
+        payment_request: ""
+    }
+
+    const [responseExists, setResponseExists] = useState<boolean>(false)
+    const [responseError, setResponseError] = useState<boolean>(false)
+    const [responseMessage, setResponseMessage] = useState<string>("")
+    const [responseInvoiceId, setResponseInvoiceId] = useState<false | number>(
+        false
+    )
+    const [responsePaymentRequest, setResponsePaymentRequest] =
+        useState<string>("")
 
     function handleChangeInput(e: ChangeEvent<HTMLInputElement>) {
         setUsername(e.target.value)
@@ -40,12 +57,17 @@ export default function Home() {
             },
             body: JSON.stringify({ user: username }),
         })
-        const parsedResponse = await response.json()
+        const parsedResponse = (await response.json()) as checkResponse
+        setResponseExists(parsedResponse.exists)
+        setResponseError(parsedResponse.error)
+        setResponseMessage(parsedResponse.message)
+        setResponsePaymentRequest(parsedResponse.payment_request)
+        setResponseInvoiceId(parsedResponse.invoice_id)
 
         setButtonLoading(false)
 
         if (parsedResponse.exists) {
-            alert("Username already exists, choose another one")
+            alert(parsedResponse.message)
         } else {
             setUsernameChecked(true)
             setButtonText(buttontexts[1])
@@ -59,15 +81,31 @@ export default function Home() {
             headers: {
                 contentType: "application/json",
             },
-            body: JSON.stringify({ user: username, npub: userNpub }),
+            body: JSON.stringify({
+                user: username,
+                npub: userNpub,
+                invoice_id: responseInvoiceId,
+            }),
         })
+
         const parsedResponse = await response.json()
 
-        setUsernameChecked(false)
-        setButtonLoading(false)
-        setButtonText(buttontexts[0])
-        setUsername("")
-        setNpub("")
+        if (parsedResponse.reset_invoice) {
+            setUsernameChecked(false)
+            setButtonLoading(false)
+            setButtonText(buttontexts[0])
+            setUsername("")
+            setNpub("")
+
+            setResponseExists(false)
+            setResponseError(false)
+            setResponseMessage("")
+            setResponsePaymentRequest("")
+            setResponseInvoiceId(false)
+        } else {
+            setButtonLoading(false)
+        }
+
         alert(parsedResponse.message)
     }
 
@@ -117,6 +155,24 @@ export default function Home() {
                             placeholder='Nostr pubkey, npub1'
                         />
                     </InputGroup>
+                    <VStack hidden={!responseInvoiceId}>
+                        <Text fontSize='md'>
+                            Copie the invoice below or scan the code to pay,
+                            once paid click register username to verify your
+                            nostr account.
+                        </Text>
+                        <QRCode value={responsePaymentRequest} />
+                        <b>Pay Only 1 sat</b>
+                        <InputGroup size='sm'>
+                            <Input
+                                hidden={!usernameChecked}
+                                variant='filled'
+                                value={responsePaymentRequest}
+                                onChange={e => handleChangeNpub(e)}
+                                placeholder='Nostr pubkey, npub1'
+                            />
+                        </InputGroup>
+                    </VStack>
                     <Button
                         onClick={e =>
                             usernameChecked
