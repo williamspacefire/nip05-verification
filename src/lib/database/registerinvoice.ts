@@ -1,4 +1,5 @@
-import { connection } from "./connection"
+import { addDoc, collection } from "firebase/firestore"
+import { firebaseDatabase } from "./connection"
 import getInvoiceIdByHash from "./getinvoiceid"
 
 export default async function registerInvoiceAndCheckIfWasSaved(
@@ -7,12 +8,12 @@ export default async function registerInvoiceAndCheckIfWasSaved(
     memo: string,
     amount: number
 ) {
-    await (
-        await connection
-    ).execute(
-        "INSERT INTO `invoice` (`payment_hash`, `payment_request`, `memo`, `amount`) VALUES (?,?,?,?)",
-        [payment_hash, payment_request, memo, amount]
-    )
+    await addDoc(collection(firebaseDatabase, "invoice"), {
+        payment_hash: payment_hash,
+        payment_request: payment_request,
+        memo: memo,
+        amount: amount,
+    })
 
     return await getInvoiceIdByHash(payment_hash)
 }

@@ -1,15 +1,15 @@
-import { connection } from "./connection"
+import { collection, getDocs, query, where } from "firebase/firestore"
+import { firebaseDatabase } from "./connection"
 
 export default async function getUserInfo(username: string) {
-    const [rows, fields] = await (
-        await connection
-    ).execute(
-        "SELECT username, pubkey FROM usernames WHERE username = ? LIMIT 1",
-        [username]
+    const q = query(
+        collection(firebaseDatabase, "usernames"),
+        where("username", "==", username)
     )
+    const usernameSnapshot = await getDocs(q)
 
     return {
-        username: rows[0].username,
-        pubkey: rows[0].pubkey,
+        username: usernameSnapshot.docs[0].data().username,
+        pubkey: usernameSnapshot.docs[0].data().pubkey,
     }
 }

@@ -1,11 +1,12 @@
-import { connection } from "./connection"
+import { collection, getDocs, query, where } from "firebase/firestore"
+import { firebaseDatabase } from "./connection"
 
 export default async function getInvoiceIdByHash(payment_hash: string) {
-    const [rows, fields] = await (
-        await connection
-    ).execute("SELECT id FROM invoice WHERE payment_hash = ? LIMIT 1", [
-        payment_hash,
-    ])
+    const q = query(
+        collection(firebaseDatabase, "invoice"),
+        where("payment_hash", "==", payment_hash)
+    )
+    const invoiceSnapshot = await getDocs(q)
 
-    return rows.length > 0 ? rows[0].id : false
+    return invoiceSnapshot.size > 0 ? invoiceSnapshot.docs[0].id : false
 }

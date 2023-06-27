@@ -1,11 +1,11 @@
-import { connection } from "./connection"
+import { doc, getDoc } from "firebase/firestore"
+import { firebaseDatabase } from "./connection"
 
-export default async function getPaymentHash(invoice_id: number) {
-    const [rows, fields] = await (
-        await connection
-    ).execute("SELECT payment_hash FROM invoice WHERE id = ? LIMIT 1", [
-        invoice_id,
-    ])
+export default async function getPaymentHash(invoice_id: string) {
+    const invoicesRef = doc(firebaseDatabase, "invoice", invoice_id)
+    const invoiceSnapshot = await getDoc(invoicesRef)
 
-    return rows.length > 0 ? rows[0].payment_hash : false
+    return invoiceSnapshot.exists()
+        ? invoiceSnapshot.data().payment_hash
+        : false
 }

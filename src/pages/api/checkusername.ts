@@ -7,7 +7,7 @@ type Data = {
     exists: boolean
     error: boolean
     message: string
-    invoice_id: number | boolean
+    invoice_id: string | boolean
     payment_request: string
 }
 
